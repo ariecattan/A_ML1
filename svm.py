@@ -17,22 +17,26 @@ x, y = shuffle(x, y, random_state=1)
 
 EPOCHS = 1000000
 ETA = 0.1
-LAMBDA = 0.2
+LAMBDA = 0.3
 
-def binary_svm(train_x, train_y, eta, lamb):
+def binary_svm(train_x, train_y, lamb, label):
+    losses = []
+    train_y = [1 if x == label else -1 for x in train_y]
     indexes = list(range(len(train_y)))
     image_size = len(train_x[0])
-    w = np.random.rand(image_size)
+    w = np.zeros(image_size)
     for i in range(1, EPOCHS):
         index = random.choice(indexes)
-        data, label = x[index], y[index]
-        eta /= math.sqrt(i)
-        if 1 - label * data.dot(w) > 0:
-            w = (1 - eta * lamb) * w + eta * label * data
+        data, target = train_x[index], train_y[index]
+        eta = ETA / math.sqrt(i)
+        loss =  1 - target * data.dot(w)
+        losses.append(loss)
+        if loss > 0:
+            w = (1 - eta * lamb) * w + eta * target * data
         else:
             w = (1 - eta * lamb) * w
 
-    return w
+    return w, losses
 
 
 def one_vs_all(x, y, label):
@@ -43,6 +47,15 @@ def one_vs_all(x, y, label):
     w = binary_svm(train_x, train_y, ETA, LAMBDA)
     return w
 
+
+def accuracy(train_x, train_y, w, label):
+    counter = 0.0
+    train_y = [1 if x == label else -1 for x in train_y]
+    for sample, target in zip(train_x, train_y):
+        pred = np.sign(sample.dot(w))
+        if pred == target:
+            counter += 1
+    return counter/len(train_y)
 
 
 if __name__ == '__main__':
@@ -60,4 +73,7 @@ if __name__ == '__main__':
 
 
     params = {}
-    params['W01'] = binary_svm(x[idx0_1], y[idx0_1], ETA, LAMBDA)
+
+    train_x, train_y = x[idx0_1], y[idx0_1]
+    w, losses = binary_svm(train_x, train_y, LAMBDA, 0)
+    print(accuracy(train_x, train_y, w, 0))
