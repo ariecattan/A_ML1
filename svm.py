@@ -30,6 +30,7 @@ ETA = 0.1
 LAMBDA = 0.1
 categories = 4
 image_size = 784
+random_classifier = 5
 
 
 def binary_svm(train_x, train_y, label):
@@ -105,6 +106,8 @@ def loss_predict(x, M, params):
 
 if __name__ == '__main__':
 
+
+    #One Vs All
     print('One vs all')
     one_vs_all = np.zeros((categories, image_size))
     for i in range(categories):
@@ -116,6 +119,7 @@ if __name__ == '__main__':
         OVA_Matrix[i][i] = 1
 
 
+    #All Pairs
     print('All pairs')
     classifier_number = int(categories * (categories - 1) / 2)
 
@@ -139,15 +143,7 @@ if __name__ == '__main__':
     all_pairs[4] = binary_svm(x[idx1_3], y[idx1_3], 1)
     all_pairs[5] = binary_svm(x[idx2_3], y[idx2_3], 2)
 
-    '''
-    acc_0_1 = accuracy_svm(x[idx0_1], y[idx0_1], all_pairs[0], 0)
-    acc_0_2 = accuracy_svm(x[idx0_2], y[idx0_2], all_pairs[1], 0)
-    acc_0_3 = accuracy_svm(x[idx0_3], y[idx0_3], all_pairs[2], 0)
-    acc_1_2 = accuracy_svm(x[idx1_2], y[idx1_2], all_pairs[3], 1)
-    acc_1_3 = accuracy_svm(x[idx1_3], y[idx1_3], all_pairs[4], 1)
-    acc_2_3 = accuracy_svm(x[idx2_3], y[idx2_3], all_pairs[5], 2)
-
-    '''
+    
     AP_Matrix = np.zeros((categories, classifier_number))
 
     for key, value in dict.items():
@@ -157,22 +153,28 @@ if __name__ == '__main__':
         AP_Matrix[wrong][key] = -1
 
 
-    random_params = np.zeros((categories, image_size))
 
+    #Random
+    random_params = np.zeros((random_classifier, image_size))
 
-    Random_Matrix = np.zeros((categories, categories))
-    for i in range(categories):
+    Random_Matrix = np.zeros((categories, random_classifier))
+    test = []
+    for i in range(random_classifier):
         right, wrong = np.random.choice(range(4), 2, replace=False)
+        while (right, wrong) in test or (wrong, right) in test:
+            right, wrong = np.random.choice(range(4), 2, replace=False)
         Random_Matrix[right][i] = 1
         Random_Matrix[wrong][i] = -1
+        test.append((right, wrong))
         ids = [j for j, label in enumerate(y) if label == right or label == wrong]
         random_params[i] = binary_svm(x[ids], y[ids], right)
-
 
 
     train_svm = datetime.datetime.now() - start
     print("Training SVM : " + str(train_svm) + "\n")
 
+
+    #Accuracy
 
     #One-vs-all
     acc_hamming_ovs = accuracy(dev_x, dev_y, hamming_predict, OVA_Matrix, one_vs_all)
@@ -187,6 +189,7 @@ if __name__ == '__main__':
 
     acc_loss_ap = accuracy(dev_x, dev_y, loss_predict, AP_Matrix, all_pairs)
     print('Accuracy loss ap: ' + str(acc_loss_ap))
+
 
     #Random matrix
     acc_hamming_rnd = accuracy(dev_x, dev_y, hamming_predict, Random_Matrix, random_params)
@@ -203,11 +206,12 @@ if __name__ == '__main__':
     test_data = np.loadtxt(test_file)
     predict(test_data, hamming_predict, OVA_Matrix, one_vs_all, 'test.onevall.ham.pred')
     predict(test_data, hamming_predict, AP_Matrix, all_pairs, 'test.allpairs.ham.pred')
-    predict(test_data, hamming_predict, OVA_Matrix, one_vs_all, 'test.randm.ham.pred')
+    predict(test_data, hamming_predict, Random_Matrix, one_vs_all, 'test.randm.ham.pred')
     predict(test_data, loss_predict, OVA_Matrix, one_vs_all, 'test.onevall.loss.pred')
     predict(test_data, loss_predict, AP_Matrix, all_pairs, 'test.allpairs.loss.pred')
-    predict(test_data, loss_predict, OVA_Matrix, one_vs_all, 'test.randm.loss.pred')
+    predict(test_data, loss_predict, Random_Matrix, one_vs_all, 'test.randm.loss.pred')
 
     predict = datetime.datetime.now() - evaluate
+
     print("Predict : " + str(predict) + "\n")
 
