@@ -206,12 +206,11 @@ if __name__ == '__main__':
     test_data = np.loadtxt(test_file)
     predict(test_data, hamming_predict, OVA_Matrix, one_vs_all, 'test.onevall.ham.pred')
     predict(test_data, hamming_predict, AP_Matrix, all_pairs, 'test.allpairs.ham.pred')
-    predict(test_data, hamming_predict, Random_Matrix, one_vs_all, 'test.randm.ham.pred')
+    predict(test_data, hamming_predict, Random_Matrix, random_params, 'test.randm.ham.pred')
     predict(test_data, loss_predict, OVA_Matrix, one_vs_all, 'test.onevall.loss.pred')
     predict(test_data, loss_predict, AP_Matrix, all_pairs, 'test.allpairs.loss.pred')
-    predict(test_data, loss_predict, Random_Matrix, one_vs_all, 'test.randm.loss.pred')
+    predict(test_data, loss_predict, Random_Matrix, random_params, 'test.randm.loss.pred')
 
     predict = datetime.datetime.now() - evaluate
 
     print("Predict : " + str(predict) + "\n")
-
